@@ -18,4 +18,5 @@ else
   printf 'distributionSha256Sum=%s\n' "$sha" >> "$PROPS"
 fi
 
+
 echo "pinned $(basename "$url") -> $sha"
