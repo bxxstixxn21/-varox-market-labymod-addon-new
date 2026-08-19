@@ -63,10 +63,17 @@ public final class VaroxMarketCommand extends Command {
   }
 
   private void displayHelp() {
-    this.displayMessage(Component.text("Varox Markt", NamedTextColor.GOLD));
-    this.displayMessage(Component.text("/varoxmarkt <Itemname> – Preis und Verlauf anzeigen", NamedTextColor.GRAY));
-    this.displayMessage(Component.text("/varoxmarkt top – stärkste Preisbewegungen", NamedTextColor.GRAY));
-    this.displayMessage(Component.text("/varoxmarkt refresh – Daten sofort aktualisieren", NamedTextColor.GRAY));
+    Component help = Component.text("◆ Varox Markt", NamedTextColor.GOLD)
+        .append(Component.newline())
+        .append(Component.text("  /varoxmarkt <Itemname>  ", NamedTextColor.WHITE))
+        .append(Component.text("Preis und Verlauf", NamedTextColor.GRAY))
+        .append(Component.newline())
+        .append(Component.text("  /varoxmarkt top  ", NamedTextColor.WHITE))
+        .append(Component.text("stärkste Bewegungen", NamedTextColor.GRAY))
+        .append(Component.newline())
+        .append(Component.text("  /varoxmarkt refresh  ", NamedTextColor.WHITE))
+        .append(Component.text("Daten aktualisieren", NamedTextColor.GRAY));
+    this.displayMessage(help);
   }
 
   private void displayTopMovers() {
@@ -77,29 +84,48 @@ public final class VaroxMarketCommand extends Command {
     }
 
     List<VaroxMarketItem> movers = this.marketService.topMovers(5);
-    this.displayMessage(Component.text("Varox Markt – stärkste Bewegungen", NamedTextColor.GOLD));
+    Component output = Component.text("◆ Varox Markt", NamedTextColor.GOLD)
+        .append(Component.text("  Top-Bewegungen", NamedTextColor.GRAY));
     if (movers.isEmpty()) {
-      this.displayMessage(Component.text("Zurzeit liegen keine Preisänderungen vor.", NamedTextColor.GRAY));
+      output.append(Component.newline()).append(Component.text("  Keine Preisänderungen vorhanden.", NamedTextColor.GRAY));
+      this.displayMessage(output);
       return;
     }
 
-    for (VaroxMarketItem item : movers) {
-      TextColor color = item.change() >= 0.0D ? NamedTextColor.GREEN : NamedTextColor.RED;
-      this.displayMessage(Component.text(item.name() + ": " + signedPercent(item.change()) + "% · "
-          + PRICE_FORMAT.format(item.buy()) + " Voxis", color));
+    for (int index = 0; index < movers.size(); index++) {
+      output.append(Component.newline()).append(this.formatTopMover(movers.get(index), index + 1));
     }
+    output.append(Component.newline()).append(Component.text("  /vmarkt <Item>", NamedTextColor.DARK_GRAY));
+    this.displayMessage(output);
   }
 
   private void displayItem(VaroxMarketItem item) {
-    this.displayMessage(Component.text("Varox Markt – " + item.name(), NamedTextColor.GOLD));
-    this.displayMessage(Component.text("Kaufpreis: " + PRICE_FORMAT.format(item.buy())
-        + " Voxis | Verkaufspreis: " + (item.sell() > 0 ? PRICE_FORMAT.format(item.sell()) + " Voxis" : "—"),
-        NamedTextColor.YELLOW));
-
     TextColor trendColor = item.change() > 0.0D ? NamedTextColor.GREEN
         : item.change() < 0.0D ? NamedTextColor.RED : NamedTextColor.GRAY;
-    this.displayMessage(Component.text("Trend: " + signedPercent(item.change()) + "%", trendColor));
-    this.displayMessage(Component.text("Verlauf: " + sparkline(item), NamedTextColor.AQUA));
+    String direction = item.change() > 0.0D ? "▲" : item.change() < 0.0D ? "▼" : "•";
+    String sellPrice = item.sell() > 0.0D ? PRICE_FORMAT.format(item.sell()) + " V" : "—";
+
+    Component output = Component.text("◆ ", NamedTextColor.GOLD)
+        .append(Component.text(item.name(), NamedTextColor.WHITE))
+        .append(Component.newline())
+        .append(Component.text("  Kauf  ", NamedTextColor.GRAY))
+        .append(Component.text(PRICE_FORMAT.format(item.buy()) + " V", NamedTextColor.YELLOW))
+        .append(Component.text("   │   Verkauf  ", NamedTextColor.GRAY))
+        .append(Component.text(sellPrice, NamedTextColor.YELLOW))
+        .append(Component.newline())
+        .append(Component.text("  " + direction + " " + signedPercent(item.change()) + "%", trendColor))
+        .append(Component.text("   │   Verlauf  ", NamedTextColor.GRAY))
+        .append(Component.text(sparkline(item), NamedTextColor.AQUA));
+    this.displayMessage(output);
+  }
+
+  private Component formatTopMover(VaroxMarketItem item, int position) {
+    TextColor trendColor = item.change() >= 0.0D ? NamedTextColor.GREEN : NamedTextColor.RED;
+    String direction = item.change() >= 0.0D ? "▲" : "▼";
+    return Component.text("  " + position + ". ", NamedTextColor.DARK_GRAY)
+        .append(Component.text(item.name(), NamedTextColor.WHITE))
+        .append(Component.text("  " + direction + " " + signedPercent(item.change()) + "%", trendColor))
+        .append(Component.text("  •  " + PRICE_FORMAT.format(item.buy()) + " V", NamedTextColor.YELLOW));
   }
 
   private static String sparkline(VaroxMarketItem item) {
