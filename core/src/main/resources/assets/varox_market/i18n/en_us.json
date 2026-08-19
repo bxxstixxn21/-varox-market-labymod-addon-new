@@ -1,0 +1,14 @@
+{
+  "varox_market": {
+    "settings": {
+      "enabled": {
+        "name": "Enable Varox Market"
+      }
+    },
+    "hudWidget": {
+      "varox_market": {
+        "name": "Varox Market"
+      }
+    }
+  }
+}
